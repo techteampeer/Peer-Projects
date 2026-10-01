@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<title>OATH IT Service Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Georgia&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light only; /* always the light theme, whatever the device's dark-mode setting */
+    /* OATH navy: navigation, primary actions, links, selection */
+    --navy: #2C5697;
+    --navy-dark: #1F3F72;
+    --navy-ink: #14213D;
+    --navy-50: #EEF2F9;
+    --navy-100: #DCE5F3;
+    /* Muted olive / sage: small accents, badges, separators only */
+    --sage: #8C9670;
+    --sage-700: #5E6B45;
+    --sage-50: #F1F3EA;
+    --sage-200: #D9DFC9;
+    --black: #000000;
+    --paper: #F6F7F9;
+    --card: #FFFFFF;
+    --subtle: #F8F9FB;
+    --ink: #1A1A1A;
+    --ink-2: #3F4652;
+    --muted: #5B5F66;
+    --line: #DADDE2;
+    --line-soft: #E8EBEF;
+    --field: #8A93A0;
+    --ok: #1B6E37;
+    --ok-bg: #E8F3EB;
+    --amber-bg: #FBF1DC;
+    --amber: #835A00;
+    --err: #A12A1E;
+    --err-bg: #FBECEA;
+    --shadow-xs: 0 1px 2px rgba(16, 24, 40, .05);
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, .04), 0 2px 6px rgba(16, 24, 40, .05);
+    --shadow-md: 0 4px 14px rgba(16, 24, 40, .08);
+    --radius: 12px;
+    --max: 1360px;
+    --pad: 24px;
+    /* Header content aligns with the dashboard column; never narrower than the side padding. */
+    --gutter: max(calc(var(--pad) + env(safe-area-inset-left, 0px)), calc((100% - var(--max)) / 2 + var(--pad)));
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (max-width: 640px) { :root { --pad: 16px; } }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body {
+    margin: 0; padding: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font); -webkit-font-smoothing: antialiased; line-height: 1.45;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  a { color: var(--navy); }
+  :focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
+  /* ---- Header: government banner, OATH identity, navigation ---- */
+  .topbar {
+    background: var(--black); color: #fff; padding: 7px var(--gutter);
+    border-bottom: 3px solid var(--sage);
+    display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 600; letter-spacing: .06em;
+  }
+  .topbar .env { margin-left: auto; flex-shrink: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; color: #E4E8D8; border: 1px solid var(--sage); padding: 2px 9px; border-radius: 999px; }
+
+  .hero {
+    background: var(--card); padding: 18px var(--gutter) 16px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .hero img { width: 56px; height: 56px; flex-shrink: 0; }
+  .hero-text { min-width: 0; }
+  .hero-text .tagline { font-family: Georgia, serif; font-style: italic; font-size: 13px; color: var(--sage-700); margin-bottom: 2px; }
+  .hero-text .title { font-size: 22px; font-weight: 700; color: var(--navy); letter-spacing: -.01em; line-height: 1.2; }
+  .hero-text .sub { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+
+  .subnav {
+    background: var(--card); padding: 0 var(--gutter); border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 4px; font-size: 14px; font-weight: 600;
+  }
+  .subnav a {
+    color: var(--ink-2); text-decoration: none; padding: 12px 14px 10px; border-bottom: 3px solid transparent;
+    border-radius: 6px 6px 0 0; transition: color .15s, background-color .15s, border-color .15s;
+  }
+  .subnav a:hover { color: var(--navy); background: var(--navy-50); }
+  .subnav a:focus-visible { outline-offset: -2px; }
+  .subnav a[aria-current="page"] { color: var(--navy); border-bottom-color: var(--navy); font-weight: 700; }
+
+  @media (max-width: 640px) {
+    .topbar { font-size: 11px; letter-spacing: .04em; }
+    .hero { gap: 12px; padding-top: 14px; padding-bottom: 12px; }
+    .hero img { width: 44px; height: 44px; }
+    .hero-text .title { font-size: 19px; }
+    .hero-text .tagline, .hero-text .sub { font-size: 12.5px; }
+    .subnav a { flex: 1 1 auto; text-align: center; padding: 12px 10px 10px; }
+  }
+
+  /* ---- Page layout ---- */
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px calc(var(--pad) + env(safe-area-inset-left, 0px)) 64px; }
+  @media (max-width: 640px) { .wrap { padding-top: 22px; padding-bottom: 48px; } }
+
+  .step { display: none; animation: rise .3s ease both; }
+  .step.on { display: block; }
+  @keyframes rise { from { opacity:0; transform: translateY(8px);} to {opacity:1; transform:none;} }
+
+  .step-head { display:flex; align-items:center; gap:12px; margin: 0 0 16px; }
+  .step-num { font-weight:700; font-size:13px; color:#fff; background:var(--navy); width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-title { font-weight:700; font-size:20px; color: var(--navy-ink); letter-spacing: -.01em; }
+
+  .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+  @media (max-width: 640px) { .card { padding: 18px; } }
+
+  /* ---- Report a Ticket ---- */
+  .app-grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  @media (max-width:560px){ .app-grid{grid-template-columns:1fr;} }
+  .app-card {
+    font: inherit; color: inherit; text-align: left; width: 100%; margin: 0;
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; cursor:pointer; background:var(--card); box-shadow: var(--shadow-xs);
+    display:flex; flex-direction:column; align-items:flex-start; gap:6px; transition: border-color .15s, box-shadow .15s, background-color .15s;
+  }
+  .app-card:hover { border-color: var(--navy); box-shadow: var(--shadow-md); }
+  .app-card.selected { border-color: var(--navy); box-shadow: 0 0 0 1px var(--navy), var(--shadow-sm); background: var(--navy-50); }
+  .app-icon { width:36px; height:36px; border-radius:8px; background:var(--navy-50); display:flex; align-items:center; justify-content:center; color:var(--navy); font-weight:700; font-size:13px; letter-spacing:.02em; margin-bottom: 4px; transition: background-color .15s, color .15s; }
+  .app-card:hover .app-icon, .app-card.selected .app-icon { background: var(--navy); color: #fff; }
+  .app-name { font-weight:650; font-size:15px; color: var(--navy-ink); }
+  .app-desc { font-size:13px; color:var(--muted); line-height:1.4; }
+
+  label.field-label { display:block; font-size:12px; font-weight:650; color:var(--ink-2); margin: 18px 0 6px; text-transform:uppercase; letter-spacing:.05em; }
+  label.field-label:first-child { margin-top:0; }
+  input[type=text], input[type=search], textarea, select {
+    width:100%; font-family:var(--font); font-size:15px; padding:10px 12px; border:1px solid var(--field);
+    background:var(--card); color:var(--ink); border-radius:8px; outline:none; transition: border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus, input[type=search]:focus, textarea:focus, select:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(44,86,151,.22); }
+  input::placeholder, textarea::placeholder { color: #737A85; }
+  textarea { min-height:120px; resize:vertical; line-height: 1.5; }
+  @media (max-width: 640px) { input[type=text], input[type=search], textarea, select { font-size: 16px; } }
+
+  .drop-zone {
+    border: 1.5px dashed #AEB5C0; border-radius:var(--radius); padding:30px 20px; text-align:center; cursor:pointer;
+    color:var(--ink-2); font-size:14px; font-weight: 500; background:var(--subtle); transition: border-color .15s, background-color .15s, color .15s;
+  }
+  .drop-zone:hover, .drop-zone:focus-visible { border-color: var(--navy); color:var(--navy); background: var(--navy-50); }
+  .drop-zone .hint { display: block; font-weight: 400; margin-top: 6px; }
+  .file-list { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .file-list:empty { margin-top: 0; }
+  .file-row {
+    display:flex; align-items:center; gap:10px; padding:8px 8px 8px 14px; background:var(--subtle); border:1px solid var(--line-soft); border-radius:8px; font-size:13.5px;
+  }
+  .file-row .fname { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .file-row .fsize { color:var(--muted); font-size:12px; flex-shrink:0; }
+  .file-row .remove { cursor:pointer; color:var(--muted); font: 700 18px/1 var(--font); flex-shrink:0; width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; }
+  .file-row .remove:hover { color:var(--err); background: var(--err-bg); }
+
+  .btn {
+    font-family: var(--font); font-weight:600; font-size:14.5px; line-height: 1.2; min-height: 42px; padding:10px 20px;
+    border:1px solid var(--navy); border-radius:8px; cursor:pointer; background:var(--navy); color:#fff;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none;
+    transition: background-color .15s, border-color .15s, color .15s;
+  }
+  .btn:hover { background:var(--navy-dark); border-color: var(--navy-dark); }
+  .btn:disabled { background:var(--line); border-color: var(--line); color:var(--muted); cursor:not-allowed; }
+  .btn.ghost { background:var(--card); color:var(--ink-2); border:1px solid var(--field); }
+  .btn.ghost:hover { border-color:var(--navy); color: var(--navy); background: var(--navy-50); }
+  .btn-row { display:flex; justify-content:space-between; gap: 12px; margin-top:20px; }
+
+  .spinner { width:16px; height:16px; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; display:inline-block; animation:spin .7s linear infinite; margin-right:8px; vertical-align:-3px; }
+  @keyframes spin { to { transform:rotate(360deg);} }
+
+  .ticket-card { background: var(--card); border:1px solid var(--line-soft); border-top: 3px solid var(--navy); border-radius:var(--radius); padding:22px 24px; box-shadow: var(--shadow-sm); }
+  @media (max-width: 640px) { .ticket-card { padding: 18px; } }
+  .ticket-top { display:flex; justify-content:space-between; align-items:flex-start; gap: 12px; margin-bottom:14px; }
+  .ticket-id { font-weight:700; font-size:20px; color:var(--navy); }
+  .status-badge { flex-shrink: 0; font-weight:700; font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; padding:4px 10px; border-radius:999px; background:#EAF1F9; color:#1F5FA8; border: 1px solid rgba(31,95,168,.28); }
+  .ticket-row { display:flex; justify-content:space-between; gap: 16px; font-size:14px; padding:9px 0; border-top:1px solid var(--line-soft); }
+  .ticket-row .k { color:var(--muted); flex-shrink: 0; }
+  .ticket-row > span:last-child { text-align: right; overflow-wrap: anywhere; }
+  .ticket-desc { font-size:14px; line-height: 1.55; margin:12px 0 14px; padding:12px 14px; background:var(--subtle); border: 1px solid var(--line-soft); border-radius:8px; overflow-wrap: anywhere; }
+  .attach-list { margin-top:12px; }
+  .attach-item { display:flex; align-items:center; gap:8px; font-size:13.5px; padding:6px 0; }
+  .attach-item a { color:var(--navy); text-decoration:none; font-weight:600; }
+  .attach-item a:hover { text-decoration:underline; }
+  .doc-icon { width:16px; height:16px; flex-shrink:0; color:var(--muted); }
+
+  .restart-row { text-align:center; margin-top:24px; color: var(--muted); }
+  .restart-row button { background:none; border:none; color:var(--navy); font-size:14px; font-weight: 600; cursor:pointer; text-decoration:underline; text-underline-offset: 3px; font-family:var(--font); padding: 10px 6px; border-radius: 6px; }
+  .restart-row button:hover { color: var(--navy-dark); }
+
+  .hint { font-size:12.5px; color:var(--muted); margin-top:6px; }
+
+  .notice { font-size:13.5px; line-height:1.45; padding:12px 14px; border:1px solid var(--err); border-radius:8px; background:var(--err-bg); color:var(--err); }
+  .notice .btn { display:flex; margin-top:10px; padding:7px 16px; min-height: 36px; font-size:13.5px; }
+  #submitError { margin-top:14px; }
+
+  /* ---- Dashboard ---- */
+  .wrap-wide { max-width: var(--max); }
+  .dash-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:24px; }
+  .page-title { margin:0; font-size:26px; font-weight:700; color: var(--navy-ink); letter-spacing: -.015em; line-height: 1.2; }
+  .page-sub { margin:6px 0 0; font-size:14.5px; color:var(--muted); }
+  @media (max-width: 640px) { .page-title { font-size: 22px; } .dash-head .btn { width: 100%; } }
+  .stat-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:16px; margin-bottom:24px; }
+  @media (max-width:760px){ .stat-grid { grid-template-columns:1fr 1fr; gap: 12px; } }
+  .stat-card { position: relative; background:var(--card); border:1px solid var(--line-soft); border-radius:var(--radius); padding:18px 20px 16px; box-shadow: var(--shadow-sm); }
+  .stat-card::before { content: ""; position: absolute; top: -1px; left: 20px; width: 32px; height: 3px; border-radius: 0 0 3px 3px; background: var(--navy); }
+  .stat-label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .stat-value { font-size:30px; font-weight:700; margin-top:6px; color: var(--navy-ink); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) { .stat-card { padding: 14px 16px 12px; } .stat-card::before { left: 16px; } .stat-value { font-size: 26px; } }
+  .panel { padding:0; overflow:hidden; }
+  .panel-head { padding:16px 20px; border-bottom:1px solid var(--line-soft); }
+  .panel-title { margin:0; font-size:17px; font-weight:700; color: var(--navy-ink); }
+  .table-wrap { overflow-x:auto; }
+  .ticket-table { width:100%; border-collapse:collapse; font-size:14px; }
+  .ticket-table th { text-align:left; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); padding:10px 16px; background:var(--subtle); border-bottom:1px solid var(--line); white-space:nowrap; }
+  .ticket-table td { padding:13px 16px; border-bottom:1px solid var(--line-soft); vertical-align: middle; }
+  .ticket-table th:first-child, .ticket-table td:first-child { padding-left: 20px; }
+  .ticket-table tbody tr:last-child td { border-bottom:none; }
+  .empty-state { text-align:center; padding:36px 16px; border-top:1px solid var(--line-soft); }
+  .empty-title { font-weight:600; font-size:15px; }
+  .empty-text { color:var(--muted); font-size:13.5px; line-height:1.5; margin:6px auto 0; max-width:460px; }
+  /* ---- Ticket queue + detail drawer (FDNY service-desk pattern) ---- */
+  .queue-head { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; }
+  .queue-count { font-size:13px; color:var(--muted); margin-top:3px; }
+  .queue-tools { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .queue-tools input, .queue-tools select { width:auto; font-size:14px; padding:8px 11px; min-height: 38px; }
+  .queue-tools input { width:260px; max-width:100%; }
+  .queue-tools .btn { padding:8px 14px; min-height: 38px; font-size:13.5px; }
+  @media (max-width: 640px) {
+    .queue-tools { width: 100%; }
+    .queue-tools input { flex: 1 1 100%; width: auto; }
+    .queue-tools select { flex: 1 1 auto; }
+  }
+  .ticket-table tr.recent-row { cursor:pointer; transition: background-color .12s; }
+  .ticket-table tr.recent-row:hover { background:#F5F8FC; }
+  .ticket-table tr.recent-row:focus { outline:none; }
+  .ticket-table tr.recent-row:focus-visible { outline: 2px solid var(--navy); outline-offset: -2px; }
+  .ticket-table tr.recent-row.active { background:var(--navy-50); box-shadow:inset 3px 0 0 var(--navy); }
+  .ticket-table td.t-id { font-weight:700; color:var(--navy); white-space:nowrap; }
+  /* Subject takes the remaining width and truncates (full text in its title); other columns size to content. */
+  .ticket-table td.t-subject { width:100%; max-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight: 500; }
+  .ticket-table td.nowrap { white-space:nowrap; }
+  .muted { color:var(--muted); }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border:1px solid #E2E5EA; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; color:var(--ink-2); background:#F3F4F6; }
+  .pill.dot::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .pill.st-new { color:#1F5FA8; background:#EAF1F9; border-color:rgba(31,95,168,.28); }
+  .pill.st-progress { color:var(--amber); background:var(--amber-bg); border-color:rgba(131,90,0,.30); }
+  .pill.st-done { color:var(--ok); background:var(--ok-bg); border-color:rgba(27,110,55,.28); }
+  .doc-link { background:none; border:none; padding:2px 0; font-family:var(--font); font-size:13.5px; font-weight:600; color:var(--navy); cursor:pointer; text-decoration:underline; text-underline-offset: 2px; }
+  .doc-link:hover { color: var(--navy-dark); }
+
+  /* Tablet / small laptop / phone: each ticket becomes a readable stacked row instead of a squeezed table. */
+  @media (max-width: 1180px) {
+    .table-wrap { overflow: visible; }
+    .ticket-table { min-width: 0; }
+    .ticket-table, .ticket-table tbody { display: block; }
+    .ticket-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+    .ticket-table tr.recent-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 14px 16px 14px 20px; border-bottom: 1px solid var(--line-soft); }
+    .ticket-table tbody tr:last-child { border-bottom: none; }
+    .ticket-table td, .ticket-table th:first-child, .ticket-table td:first-child { display: block; padding: 0; border: none; min-width: 0; }
+    .ticket-table td.nowrap { white-space: normal; overflow-wrap: anywhere; }
+    .ticket-table td:nth-child(1) { order: 1; }
+    .ticket-table td:nth-child(4) { order: 2; margin-left: auto; }
+    .ticket-table td:nth-child(3) { order: 3; flex: 1 0 100%; width: auto; max-width: none; white-space: normal; overflow: visible; font-weight: 600; font-size: 15px; color: var(--navy-ink); }
+    .ticket-table td:nth-child(2) { order: 4; font-size: 13px; color: var(--ink-2); font-weight: 600; }
+    .ticket-table td:nth-child(5) { order: 5; font-size: 13px; color: var(--ink-2); }
+    .ticket-table td:nth-child(6) { order: 6; font-size: 13px; }
+    .ticket-table td:nth-child(7) { order: 7; font-size: 13px; }
+    .ticket-table td:nth-child(5)::before { content: "Assigned to "; color: var(--muted); }
+    .ticket-table td:nth-child(6)::before { content: "Updated "; }
+  }
+
+  .drawer-backdrop { position:fixed; inset:0; background:rgba(17,24,39,.40); z-index:40; }
+  .drawer { position:fixed; top:0; right:0; bottom:0; width:min(600px, 100%); background:var(--card); border-left:1px solid var(--line); box-shadow:-12px 0 32px rgba(16,24,40,.16); z-index:41; overflow-y:auto; overscroll-behavior: contain; animation:drawerIn .2s ease both; }
+  @keyframes drawerIn { from { transform:translateX(28px); opacity:0; } to { transform:none; opacity:1; } }
+  .drawer-bar { position:sticky; top:0; z-index:1; display:flex; justify-content:space-between; align-items:center; padding:10px 14px 10px 24px; background:var(--card); border-bottom:1px solid var(--line-soft); }
+  .drawer-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .drawer-close { background:none; border:none; font-size:26px; line-height:1; cursor:pointer; color:var(--muted); width: 40px; height: 40px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+  .drawer-close:hover { color:var(--ink); background: #F1F3F5; }
+  .drawer .inc-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .inc-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .inc-badges .pill:not(.dot) { color: var(--sage-700); background: var(--sage-50); border-color: var(--sage-200); }
+  .inc-loading { font-size:13.5px; color:var(--muted); margin-top:18px; }
+  .inc-body .notice { margin-top:18px; }
+  .inc-body { padding:22px 24px 32px; }
+  .inc-empty { padding:28px 16px; text-align:center; color:var(--muted); font-size:13.5px; }
+  .inc-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
+  .inc-id { font-weight:700; font-size:13px; color:var(--navy); letter-spacing:.02em; }
+  .inc-title { font-weight:700; font-size:21px; line-height: 1.3; margin-top:4px; color: var(--navy-ink); overflow-wrap:anywhere; }
+  .inc-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+  .inc-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px 24px; margin:0; padding:16px 18px; background:var(--subtle); border:1px solid var(--line-soft); border-radius:10px; }
+  @media (max-width:640px){ .inc-grid { grid-template-columns:1fr 1fr; } }
+  .inc-grid dt { font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .inc-grid dd { margin:3px 0 0; font-size:14px; font-weight: 500; overflow-wrap:anywhere; }
+  .inc-sub { display: flex; align-items: center; gap: 8px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-2); margin:0 0 10px; }
+  .inc-sub::before { content: ""; width: 3px; height: 12px; border-radius: 2px; background: var(--sage); flex-shrink: 0; }
+  .inc-desc { font-size:14.5px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .inc-none { font-size:13.5px; color:var(--muted); }
+  .timeline { list-style:none; margin:0; padding:0 0 0 16px; border-left:2px solid var(--line-soft); }
+  .timeline li { position:relative; padding:0 0 16px 6px; }
+  .timeline li:last-child { padding-bottom:0; }
+  .timeline li::before { content:""; position:absolute; left:-25px; top:3px; width:12px; height:12px; border-radius:50%; background:var(--navy); border:2px solid var(--card); box-shadow: 0 0 0 1px var(--navy-100); }
+  .tl-meta { font-size:12.5px; color:var(--muted); }
+  .tl-meta b { color:var(--ink); font-weight:600; }
+  .tl-msg { font-size:14px; line-height:1.55; margin-top:4px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .inc-files { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .inc-files li { display:flex; align-items:center; gap:10px; padding:8px 8px 8px 12px; background:var(--subtle); border:1px solid var(--line-soft); border-radius:8px; font-size:13.5px; }
+  .inc-files .fname { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .inc-files .btn { padding:6px 14px; min-height: 36px; font-size:13px; flex-shrink:0; }
+  /* Phone / small tablet: the incident detail is a full-width screen. */
+  @media (max-width: 720px) {
+    .drawer { width: 100%; border-left: none; box-shadow: none; }
+    .drawer-bar { padding-left: 16px; padding-right: 8px; }
+    .inc-body { padding: 18px 16px 28px; }
+    .inc-title { font-size: 19px; }
+  }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span>OFFICE OF ADMINISTRATIVE TRIALS AND HEARINGS</span>
+  <span class="env">DEMO</span>
+</div>
+
+<div class="hero">
+  <img src="data:image/png;base64,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" alt="OATH seal">
+  <div class="hero-text">
+    <div class="tagline">Independent and Impartial Administrative Law Court</div>
+    <div class="title">OATH IT Service Desk</div>
+    <div class="sub">Report an issue with any OATH system — attach files, and a technician will follow up.</div>
+  </div>
+</div>
+<nav class="subnav" aria-label="Main">
+  <a href="#report" data-view="report">Report a Ticket</a>
+  <a href="#dashboard" data-view="dashboard">Dashboard</a>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="wrap wrap-wide" id="viewDashboard" hidden>
+  <div class="dash-head">
+    <div>
+      <h1 class="page-title">IT Service Dashboard</h1>
+      <p class="page-sub">Report and manage OATH IT service requests from one place.</p>
+    </div>
+    <a href="#report" class="btn" id="newTicketBtn">Report New Ticket</a>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Total Tickets</div><div class="stat-value" data-stat="total">—</div></div>
+    <div class="stat-card"><div class="stat-label">New</div><div class="stat-value" data-stat="new">—</div></div>
+    <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value" data-stat="inProgress">—</div></div>
+    <div class="stat-card"><div class="stat-label">Resolved</div><div class="stat-value" data-stat="resolved">—</div></div>
+  </div>
+
+  <!-- Ticket queue (FDNY service-desk pattern): search, status filter, clickable rows -->
+  <section class="card panel" aria-labelledby="recentTitle">
+    <div class="panel-head queue-head">
+      <div>
+        <h2 class="panel-title" id="recentTitle">Ticket Queue</h2>
+        <div class="queue-count" id="queueCount">Loading tickets…</div>
+      </div>
+      <div class="queue-tools">
+        <input type="search" id="queueSearch" placeholder="Search tickets, applications, subjects" aria-label="Search tickets">
+        <select id="queueStatus" aria-label="Filter by status"><option value="">All statuses</option></select>
+        <button type="button" class="btn ghost" id="queueClear">Clear</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="ticket-table">
+        <thead><tr><th scope="col">Ticket</th><th scope="col">Application</th><th scope="col">Subject</th><th scope="col">Status</th><th scope="col">Assigned To</th><th scope="col">Updated</th><th scope="col">Documents</th></tr></thead>
+        <tbody id="recentTicketsBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="recentEmpty">
+      <div class="empty-title" id="recentEmptyTitle">Loading tickets…</div>
+      <div class="empty-text" id="recentEmptyText"></div>
+    </div>
+  </section>
+</div>
+
+<!-- Selected ticket: FDNY-style detail drawer -->
+<div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+<aside class="drawer" id="ticketDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerLabel" hidden>
+  <div class="drawer-bar">
+    <span class="drawer-label" id="drawerLabel">Incident Details</span>
+    <button type="button" class="drawer-close" id="drawerClose" aria-label="Close ticket details">&times;</button>
+  </div>
+  <div id="incidentDetail" aria-live="polite"></div>
+</aside>
+
+<!-- REPORT A TICKET (landing view: existing four-step wizard) -->
+<div class="wrap" id="viewReport">
+
+  <!-- STEP 1: choose app -->
+  <div class="step on" id="step1">
+    <div class="step-head"><span class="step-num">1</span><span class="step-title">Which system is this about?</span></div>
+    <div id="appStatus" aria-live="polite"></div>
+    <div class="app-grid" id="appGrid"></div>
+  </div>
+
+  <!-- STEP 2: describe -->
+  <div class="step" id="step2">
+    <div class="step-head"><span class="step-num">2</span><span class="step-title">Describe the issue</span></div>
+    <div class="card">
+      <div id="appChipHolder"></div>
+      <label class="field-label" for="userIdInput">YOUR USER ID</label>
+      <input type="text" id="userIdInput" placeholder="e.g. 42">
+      <label class="field-label" for="developerSelect">Assigned To</label>
+      <select id="developerSelect"><option value="">Loading…</option></select>
+      <label class="field-label" for="titleInput">Title</label>
+      <input type="text" id="titleInput" placeholder="Short summary, e.g. &quot;Cannot upload hearing documents&quot;">
+      <label class="field-label" for="descInput">Description</label>
+      <textarea id="descInput" placeholder="What's happening? Include any error messages and when it started."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="backTo1">&larr; Back</button>
+      <button class="btn" id="toStep3">Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: attachments -->
+  <div class="step" id="step3">
+    <div class="step-head"><span class="step-num">3</span><span class="step-title">Attach files (optional)</span></div>
+    <div class="card">
+      <div class="drop-zone" id="dropZone" tabindex="0" role="button">Click to choose files, or drag and drop here<br><span class="hint">Screenshots, PDFs, documents — multiple files allowed</span></div>
+      <input type="file" id="fileInput" multiple style="display:none;">
+      <div class="file-list" id="fileList"></div>
+    </div>
+    <div class="notice" id="submitError" role="alert" hidden></div>
+    <div class="btn-row">
+      <button class="btn ghost" id="backTo2">&larr; Back</button>
+      <button class="btn" id="submitBtn">Submit ticket</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: confirmation -->
+  <div class="step" id="step4">
+    <div class="step-head"><span class="step-num">4</span><span class="step-title">Your ticket</span></div>
+    <div class="ticket-card" id="ticketCard"></div>
+    <div class="restart-row"><button id="restartBtn">Report another issue</button> &middot; <button id="toDashboardBtn">Back to Dashboard</button></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var state = { app: null, title: "", desc: "", files: [] };
+
+function $(id){ return document.getElementById(id); }
+function showStep(id){
+  document.querySelectorAll(".step").forEach(function(s){ s.classList.remove("on"); });
+  $(id).classList.add("on");
+  $(id).scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// Escapes a value for insertion into innerHTML markup.
+function esc(v){
+  return String(v == null ? "" : v).replace(/[&<>"']/g, function(c){
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+// fetch + JSON parse that rejects on a non-2xx response (using the backend's
+// {error} message when present), so a failed request is never read as data.
+function fetchJson(url, options){
+  return fetch(url, options).then(function(r){
+    return r.json().catch(function(){ return null; }).then(function(body){
+      if (!r.ok) {
+        var err = new Error((body && body.error) || ("request failed with HTTP " + r.status));
+        err.status = r.status;
+        throw err;
+      }
+      if (!body) throw new Error("unexpected response from the server");
+      return body;
+    });
+  }, function(){
+    throw new Error("could not reach the server");
+  });
+}
+
+// ---- Step 1: load the real app catalog from GLPI via the backend ----
+var grid = $("appGrid"), appStatus = $("appStatus"), appsLoading = false;
+
+// Shows a hint (loading / empty) or, when onRetry is given, an error with a Retry button.
+function setAppStatus(message, onRetry){
+  appStatus.innerHTML = "";
+  if (!message) return;
+  var box = document.createElement("div");
+  box.className = onRetry ? "notice" : "hint";
+  box.textContent = message;
+  if (onRetry) {
+    box.setAttribute("role", "alert");
+    var retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "btn";
+    retry.textContent = "Retry";
+    retry.addEventListener("click", onRetry);
+    box.appendChild(retry);
+  }
+  appStatus.appendChild(box);
+}
+
+function renderApps(apps){
+  grid.innerHTML = "";
+  if (!apps.length) {
+    setAppStatus("No applications found in the catalog yet.");
+    return;
+  }
+  apps.forEach(function(app){
+    var el = document.createElement("button");
+    el.type = "button";
+    el.className = "app-card";
+    var name = String(app.name == null ? "" : app.name);
+    var initials = name.split(" ").map(function(w){return w[0];}).slice(0,2).join("");
+    el.innerHTML = '<span class="app-icon" aria-hidden="true">' + esc(initials) + '</span>' +
+                   '<span class="app-name">' + esc(name) + '</span>' +
+                   '<span class="app-desc">' + esc(app.description) + '</span>';
+    el.addEventListener("click", function(){
+      document.querySelectorAll(".app-card").forEach(function(c){ c.classList.remove("selected"); });
+      el.classList.add("selected");
+      state.app = app;
+      setTimeout(function(){ renderAppChip(); showStep("step2"); }, 180);
+    });
+    grid.appendChild(el);
+  });
+}
+function loadApps(){
+  if (appsLoading) return;
+  appsLoading = true;
+  grid.innerHTML = "";
+  setAppStatus("Loading applications…");
+  fetchJson("/api/apps")
+    .then(function(data){
+      if (!Array.isArray(data.apps)) throw new Error("unexpected response from the server");
+      setAppStatus("");
+      renderApps(data.apps);
+    })
+    .catch(function(err){
+      console.error("GET /api/apps failed:", err);
+      grid.innerHTML = "";
+      setAppStatus("Unable to load the application list. Please try again.", loadApps);
+    })
+    .finally(function(){ appsLoading = false; });
+}
+loadApps();
+
+function renderAppChip(){
+  $("appChipHolder").innerHTML = '<label class="field-label">Reporting an issue with</label>' +
+    '<div style="font-weight:600; font-size:14.5px; color:var(--navy); margin-bottom:4px;">' + esc(state.app.name) + '</div>';
+}
+
+// ---- Step 2 ----
+// ---- Assigned To: GLPI developer group members from GET /api/developers ----
+var devSelect = $("developerSelect");
+function loadDevelopers(){
+  fetchJson("/api/developers")
+    .then(function(data){
+      devSelect.innerHTML = '<option value="">Unassigned — leave for triage</option>';
+      (Array.isArray(data.developers) ? data.developers : []).forEach(function(d){
+        var opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = d.name;
+        devSelect.appendChild(opt);
+      });
+    })
+    .catch(function(err){
+      console.error("GET /api/developers failed:", err);
+      devSelect.innerHTML = '<option value="">Unassigned — leave for triage</option>';
+    });
+}
+loadDevelopers();
+
+$("backTo1").addEventListener("click", function(){ showStep("step1"); });
+$("toStep3").addEventListener("click", function(){
+  state.title = $("titleInput").value.trim();
+  state.desc = $("descInput").value.trim();
+  if (!state.desc) { $("descInput").focus(); $("descInput").style.borderColor = "#C0392B"; return; }
+  showStep("step3");
+});
+
+// ---- Step 3: attachments ----
+var dropZone = $("dropZone"), fileInput = $("fileInput"), fileList = $("fileList");
+dropZone.addEventListener("click", function(){ fileInput.click(); });
+dropZone.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
+dropZone.addEventListener("dragover", function(e){ e.preventDefault(); dropZone.style.borderColor = "var(--navy)"; });
+dropZone.addEventListener("dragleave", function(){ dropZone.style.borderColor = ""; });
+dropZone.addEventListener("drop", function(e){
+  e.preventDefault(); dropZone.style.borderColor = "";
+  addFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener("change", function(){ addFiles(fileInput.files); fileInput.value = ""; });
+
+function addFiles(fl){
+  Array.from(fl).forEach(function(f){ state.files.push(f); });
+  renderFileList();
+}
+function fmtSize(bytes){
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + " KB";
+  return (bytes/1024/1024).toFixed(1) + " MB";
+}
+function renderFileList(){
+  fileList.innerHTML = "";
+  state.files.forEach(function(f, i){
+    var row = document.createElement("div");
+    row.className = "file-row";
+    row.innerHTML = '<span class="fname">' + esc(f.name) + '</span><span class="fsize">' + fmtSize(f.size) + '</span><button type="button" class="remove" data-i="' + i + '" aria-label="Remove ' + esc(f.name) + '">&times;</button>';
+    fileList.appendChild(row);
+  });
+  fileList.querySelectorAll(".remove").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      state.files.splice(parseInt(btn.dataset.i, 10), 1);
+      renderFileList();
+    });
+  });
+}
+
+$("backTo2").addEventListener("click", function(){ showStep("step2"); });
+
+// ---- Submit ----
+function showSubmitError(message){
+  var box = $("submitError");
+  box.textContent = message || "";
+  box.hidden = !message;
+}
+
+var submitting = false;
+$("submitBtn").addEventListener("click", function(){
+  if (submitting) return;
+  var userId = $("userIdInput").value.trim();
+  if (!userId) { $("userIdInput").focus(); $("userIdInput").style.borderColor = "#C0392B"; showStep("step2"); return; }
+
+  var btn = $("submitBtn"), back = $("backTo2");
+  submitting = true;
+  showSubmitError("");
+  btn.disabled = true;
+  back.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Creating ticket…';
+
+  var fd = new FormData();
+  fd.append("userId", userId);
+  if (devSelect.value) fd.append("developerId", devSelect.value);
+  fd.append("softwareId", state.app.id);
+  fd.append("title", state.title);
+  fd.append("text", state.desc);
+  state.files.forEach(function(f){ fd.append("files", f, f.name); });
+
+  fetchJson("/api/ticket/report-manual", { method: "POST", body: fd })
+    .then(function(data){
+      renderTicket(data.ticketId, Array.isArray(data.attachments) ? data.attachments : []);
+      showStep("step4");
+    })
+    .catch(function(err){
+      console.error("POST /api/ticket/report-manual failed:", err);
+      showSubmitError("Unable to submit the ticket. Please try again.");
+    })
+    .finally(function(){
+      submitting = false;
+      btn.disabled = false;
+      back.disabled = false;
+      btn.innerHTML = "Submit ticket";
+    });
+});
+
+function docIconSvg(){
+  return '<svg class="doc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+}
+
+function renderTicket(ticketId, docs){
+  var html =
+    '<div class="ticket-top">' +
+      '<div><div class="ticket-id">' + esc(ticketId) + '</div>' +
+      '<div style="font-size:12.5px; color:var(--muted); margin-top:2px;">' + esc(state.app.name) + '</div></div>' +
+      '<div class="status-badge">New</div>' +
+    '</div>' +
+    '<div class="ticket-desc"><b>' + esc(state.title || "(no title)") + '</b><br>' + esc(state.desc) + '</div>' +
+    '<div class="ticket-row"><span class="k">Assigned queue</span><span>Level 1 — Shared Queue</span></div>' +
+    '<div class="ticket-row"><span class="k">Reported by</span><span>' + esc($("userIdInput").value.trim() || "—") + '</span></div>' +
+    (devSelect.value ? '<div class="ticket-row"><span class="k">Assigned to</span><span>' + esc(devSelect.options[devSelect.selectedIndex].text) + '</span></div>' : '');
+  if (docs.length) {
+    html += '<div class="attach-list"><label class="field-label">Attachments (' + docs.length + ')</label>';
+    docs.forEach(function(d){
+      var url = String((d && d.url) || ""), label = esc((d && d.name) || url);
+      // Only link http(s) URLs; anything else is shown as plain text.
+      html += '<div class="attach-item">' + docIconSvg() + (/^https?:\/\//i.test(url)
+        ? '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>'
+        : '<span>' + label + '</span>') + '</div>';
+    });
+    html += '</div>';
+  }
+  $("ticketCard").innerHTML = html;
+}
+
+function resetWizard(){
+  state = { app: null, title: "", desc: "", files: [] };
+  document.querySelectorAll(".app-card").forEach(function(c){ c.classList.remove("selected"); });
+  $("titleInput").value = ""; $("descInput").value = ""; $("descInput").style.borderColor = "";
+  $("userIdInput").value = ""; $("userIdInput").style.borderColor = "";
+  devSelect.value = "";
+  showSubmitError("");
+  fileList.innerHTML = "";
+  showStep("step1");
+}
+$("restartBtn").addEventListener("click", resetWizard);
+$("toDashboardBtn").addEventListener("click", function(){ location.hash = "dashboard"; });
+
+// ---- Dashboard ----
+// Loaded from GET /api/dashboard, mapped into this shape:
+//   summary: { total, new, inProgress, resolved }  (numbers, or null = unavailable)
+//   recent:  null = unavailable, or [{ ticket, application, subject, status, updated }]
+// Assignee and documents are not part of that list, so they come from
+// GET /api/tickets/:id once a ticket is opened (cached in detailCache).
+var dashboard = {
+  summary: { total: null, new: null, inProgress: null, resolved: null },
+  recent: null
+};
+var detailCache = {}, selectedNum = null;
+
+function fmtUpdated(v){
+  if (!v) return "—";
+  var d = new Date(v);
+  return isNaN(d) ? v : d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+}
+function fmtValue(v){ return (v == null || v === "") ? "—" : esc(v); }
+function fmtDate(v){ return (v == null || v === "") ? "—" : esc(fmtUpdated(v)); }
+
+// "OATH-2026-0104" -> "0104": the id GET /api/tickets/:id already accepts.
+function ticketNum(t){ return (String((t && t.ticket) || "").match(/(\d+)$/) || [])[1] || ""; }
+function statusClass(s){
+  s = String(s || "").toLowerCase();
+  if (/resolv|clos|solv/.test(s)) return "st-done";
+  if (/progress|process|assign|plan/.test(s)) return "st-progress";
+  if (/new/.test(s)) return "st-new";
+  return "";
+}
+function statusPill(s){ return s ? '<span class="pill dot ' + statusClass(s) + '">' + esc(s) + '</span>' : "—"; }
+function filesLabel(n){ return n === 1 ? "1 file" : n + " files"; }
+function docsCell(num){
+  var d = detailCache[num];
+  if (!d) return '<button type="button" class="doc-link" data-docs="' + esc(num) + '">View documents</button>';
+  var n = Array.isArray(d.attachments) ? d.attachments.length : 0;
+  return n
+    ? '<button type="button" class="doc-link" data-docs="' + esc(num) + '">' + filesLabel(n) + '</button>'
+    : '<span class="muted">No files</span>';
+}
+
+function loadDashboard(){
+  fetchJson("/api/dashboard")
+    .then(function(data){
+      detailCache = {};
+      dashboard.summary = data.summary || dashboard.summary;
+      dashboard.recent = Array.isArray(data.recent) ? data.recent : [];
+      renderDashboard();
+    })
+    .catch(function(err){
+      console.error("GET /api/dashboard failed:", err);
+      dashboard.recent = null;
+      renderDashboard();
+      $("recentEmptyTitle").textContent = "Unable to load tickets";
+      $("recentEmptyText").textContent = "Please try again in a moment.";
+    });
+}
+
+function renderDashboard(){
+  document.querySelectorAll("[data-stat]").forEach(function(el){
+    var v = dashboard.summary[el.dataset.stat];
+    el.innerHTML = typeof v === "number"
+      ? esc(v)
+      : '<span aria-hidden="true">—</span><span class="sr-only">Not available</span>';
+  });
+
+  // Status filter options come from the statuses actually present.
+  var sel = $("queueStatus"), current = sel.value;
+  var statuses = [];
+  (dashboard.recent || []).forEach(function(t){ if (t.status && statuses.indexOf(t.status) === -1) statuses.push(t.status); });
+  sel.innerHTML = '<option value="">All statuses</option>' + statuses.map(function(s){
+    return '<option value="' + esc(s) + '">' + esc(s) + '</option>';
+  }).join("");
+  sel.value = statuses.indexOf(current) === -1 ? "" : current;
+
+  renderQueue();
+}
+
+function renderQueue(){
+  var rows = dashboard.recent, body = $("recentTicketsBody");
+  var q = $("queueSearch").value.trim().toLowerCase(), st = $("queueStatus").value;
+  var shown = (rows || []).filter(function(t){
+    if (st && t.status !== st) return false;
+    if (!q) return true;
+    var d = detailCache[ticketNum(t)] || {};
+    return [t.ticket, t.application, t.subject, t.status, d.assignedTo].some(function(v){
+      return String(v || "").toLowerCase().indexOf(q) !== -1;
+    });
+  });
+
+  body.innerHTML = shown.map(function(t){
+    var num = ticketNum(t), d = detailCache[num];
+    return '<tr class="recent-row' + (num && num === selectedNum ? ' active' : '') + '" tabindex="0" data-ticket-num="' + esc(num) + '">' +
+      '<td class="t-id">' + fmtValue(t.ticket) + '</td>' +
+      '<td class="nowrap">' + fmtValue(t.application) + '</td>' +
+      '<td class="t-subject" title="' + esc(t.subject) + '">' + fmtValue(t.subject) + '</td>' +
+      '<td>' + statusPill(t.status) + '</td>' +
+      '<td class="nowrap">' + (d ? fmtValue(d.assignedTo) : '—') + '</td>' +
+      '<td class="nowrap muted">' + esc(fmtUpdated(t.updated)) + '</td>' +
+      '<td class="nowrap">' + (num ? docsCell(num) : '—') + '</td></tr>';
+  }).join("");
+
+  var total = dashboard.summary.total;
+  $("queueCount").textContent = rows
+    ? shown.length + " of " + rows.length + " most recently updated tickets shown" +
+      (typeof total === "number" ? " · " + total + " total" : "")
+    : "Ticket queue unavailable";
+
+  $("recentEmpty").hidden = !!shown.length;
+  if (rows && !rows.length) {
+    $("recentEmptyTitle").textContent = "No tickets yet";
+    $("recentEmptyText").textContent = "Issues you report will appear here.";
+  } else if (rows && !shown.length) {
+    $("recentEmptyTitle").textContent = "No tickets match those filters";
+    $("recentEmptyText").textContent = "Clear the search or status filter to see the whole queue.";
+  }
+}
+renderDashboard();
+
+$("queueSearch").addEventListener("input", renderQueue);
+$("queueStatus").addEventListener("change", renderQueue);
+$("queueClear").addEventListener("click", function(){ $("queueSearch").value = ""; $("queueStatus").value = ""; renderQueue(); });
+$("recentTicketsBody").addEventListener("click", function(e){
+  var docs = e.target.closest("[data-docs]");
+  var row = e.target.closest(".recent-row");
+  if (row) openTicket(row.dataset.ticketNum, !!docs);
+});
+$("recentTicketsBody").addEventListener("keydown", function(e){
+  var row = e.target.closest(".recent-row");
+  if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openTicket(row.dataset.ticketNum, false); }
+});
+
+// ---- Incident Details (drawer) ----
+// renderIncidentDetail(incident, view) renders one incident, or the
+// "nothing selected" state for null. Incident shape (GET /api/tickets/:id):
+//   { ticketId, application, title, status, requester, assignedTo, openedAt,
+//     updatedAt, type, urgency, impact, priority, description,
+//     activity: [{ author, timestamp, message }], attachments: [{ name, url }] }
+// view.loading / view.error show the header only (FDNY pattern: the queue
+// row appears straight away, the full detail fills in when it arrives).
+// Attachment URLs are used exactly as the backend provides them.
+
+// Returns the URL only if it is an absolute http(s) URL, otherwise "".
+function safeHttpUrl(u){
+  try {
+    var p = new URL(String(u));
+    return (p.protocol === "http:" || p.protocol === "https:") ? p.href : "";
+  } catch (e) { return ""; }
+}
+// GLPI stores rich text as (often entity-encoded) HTML; show it as plain text.
+// DOMParser documents are inert - nothing in them runs or loads.
+function glpiText(v){
+  var s = v == null ? "" : String(v);
+  for (var i = 0; i < 2 && /[<&]/.test(s); i++) {
+    s = s.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li)>/gi, "\n");
+    s = new DOMParser().parseFromString(s, "text/html").body.textContent || "";
+  }
+  return s.replace(/\n{3,}/g, "\n\n").trim();
+}
+function section(title, inner, id){
+  return '<section class="inc-section"' + (id ? ' id="' + id + '"' : '') + '><h3 class="inc-sub">' + title + '</h3>' + inner + '</section>';
+}
+
+function renderIncidentDetail(incident, view){
+  var host = $("incidentDetail");
+  view = view || {};
+  if (!incident) {
+    host.innerHTML = '<div class="inc-empty">Select an incident to view its details.</div>';
+    return;
+  }
+  var badges = statusPill(incident.status) +
+    (incident.priority ? '<span class="pill">Priority: ' + esc(incident.priority) + '</span>' : '') +
+    (incident.type ? '<span class="pill">' + esc(incident.type) + '</span>' : '');
+  var html =
+    '<div class="inc-body">' +
+      '<div class="inc-id">' + fmtValue(incident.ticketId) + '</div>' +
+      '<div class="inc-title">' + fmtValue(incident.title) + '</div>' +
+      '<div class="inc-badges">' + badges + '</div>';
+
+  if (view.loading) {
+    host.innerHTML = html + '<div class="inc-loading">Loading ticket details…</div></div>';
+    return;
+  }
+  if (view.error) {
+    host.innerHTML = html + '<div class="notice">Unable to load the full ticket details. Please try again.' +
+      '<button type="button" class="btn" id="incRetry">Retry</button></div></div>';
+    $("incRetry").addEventListener("click", function(){ openTicket(selectedNum, false); });
+    return;
+  }
+
+  var fields = [
+    ["Application", fmtValue(incident.application)], ["Assigned to", fmtValue(incident.assignedTo)],
+    ["Opened", fmtDate(incident.openedAt)],          ["Last updated", fmtDate(incident.updatedAt)],
+    ["Type", fmtValue(incident.type)],               ["Priority", fmtValue(incident.priority)],
+    ["Urgency", fmtValue(incident.urgency)],         ["Impact", fmtValue(incident.impact)]
+  ];
+  var activity = Array.isArray(incident.activity) ? incident.activity : [];
+  var files = Array.isArray(incident.attachments) ? incident.attachments : [];
+  var description = glpiText(incident.description);
+
+  html +=
+    section("Requester", '<div class="inc-desc">' + fmtValue(incident.requester) + '</div>') +
+    section("Details", '<dl class="inc-grid">' + fields.map(function(f){
+      return '<div><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>';
+    }).join("") + '</dl>') +
+    section("Description", '<div class="inc-desc">' + fmtValue(description) + '</div>') +
+    section("Activity &amp; follow-ups", activity.length
+      ? '<ol class="timeline">' + activity.map(function(a){
+          a = a || {};
+          return '<li><div class="tl-meta"><b>' + fmtValue(a.author) + '</b> &middot; ' + fmtDate(a.timestamp) + '</div>' +
+                 '<div class="tl-msg">' + esc(glpiText(a.message)) + '</div></li>';
+        }).join("") + '</ol>'
+      : '<div class="inc-none">No follow-ups yet</div>') +
+    section("Documents" + (files.length ? " (" + files.length + ")" : ""), files.length
+      ? '<ul class="inc-files">' + files.map(function(f){
+          f = f || {};
+          var url = safeHttpUrl(f.url);
+          return '<li>' + docIconSvg() + '<span class="fname">' + fmtValue(f.name) + '</span>' +
+            (url
+              ? '<a class="btn ghost" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Open File</a>'
+              : '<span class="inc-none">Unavailable</span>') + '</li>';
+        }).join("") + '</ul>'
+      : '<div class="inc-none">No documents uploaded</div>', "incDocs") +
+    '</div>';
+  host.innerHTML = html;
+}
+renderIncidentDetail(null);
+
+function drawerIsOpen(){ return !$("ticketDrawer").hidden; }
+function openDrawer(){
+  if (drawerIsOpen()) return;
+  $("drawerBackdrop").hidden = false;
+  $("ticketDrawer").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("drawerClose").focus();
+}
+function closeDrawer(){
+  if (!drawerIsOpen()) return;
+  var prev = selectedNum;
+  $("drawerBackdrop").hidden = true;
+  $("ticketDrawer").hidden = true;
+  document.body.style.overflow = "";
+  selectedNum = null;
+  renderQueue();
+  var row = prev && document.querySelector('.recent-row[data-ticket-num="' + prev + '"]');
+  if (row) row.focus();
+}
+function scrollToDocs(){
+  var el = $("incDocs");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("drawerClose").addEventListener("click", closeDrawer);
+$("drawerBackdrop").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeDrawer(); });
+
+// Opens a ticket in the drawer: the queue row shows at once, then the full
+// detail from GET /api/tickets/:id replaces it (and fills the row's
+// Assigned To / Documents cells).
+function openTicket(num, focusDocs){
+  if (!num) return;
+  selectedNum = num;
+  var row = (dashboard.recent || []).filter(function(t){ return ticketNum(t) === num; })[0] || {};
+  var projection = { ticketId: row.ticket, application: row.application, title: row.subject, status: row.status, updatedAt: row.updated };
+  openDrawer();
+  renderQueue();
+  if (detailCache[num]) {
+    renderIncidentDetail(detailCache[num]);
+    if (focusDocs) scrollToDocs();
+    return;
+  }
+  renderIncidentDetail(projection, { loading: true });
+  fetchJson("/api/tickets/" + encodeURIComponent(num))
+    .then(function(detail){
+      detailCache[num] = detail;
+      renderQueue();
+      if (selectedNum === num && drawerIsOpen()) {
+        renderIncidentDetail(detail);
+        if (focusDocs) scrollToDocs();
+      }
+    })
+    .catch(function(err){
+      console.error("GET /api/tickets/" + num + " failed:", err);
+      if (selectedNum === num && drawerIsOpen()) renderIncidentDetail(projection, { error: true });
+    });
+}
+
+// "Report New Ticket" always starts a fresh report if the last one was completed.
+$("newTicketBtn").addEventListener("click", function(){
+  if ($("step4").classList.contains("on")) resetWizard();
+});
+
+// ---- Views: Report a Ticket (landing) and Dashboard, switched by URL hash ----
+function showView(){
+  var view = location.hash === "#dashboard" ? "dashboard" : "report";
+  $("viewDashboard").hidden = view !== "dashboard";
+  $("viewReport").hidden = view !== "report";
+  document.querySelectorAll(".subnav a").forEach(function(a){
+    if (a.dataset.view === view) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+  if (view === "dashboard") loadDashboard();
+  else closeDrawer();
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", showView);
+showView();
+
+})();
+</script>
+</body>
+</html>
