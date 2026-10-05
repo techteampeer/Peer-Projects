@@ -1,54 +1,64 @@
-name: Deploy to Google Cloud Run
+name: Deploy to Google Cloud Run (General Demo)
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
   PROJECT_ID: itservicedesk-502618
   REGION: us-central1
-  REPO_NAME: servicedesk-repo
-  IMAGE_NAME: oath-app
-  SERVICE_NAME: oath-itsm
+  REPO_NAME: itsm-general-demo
+  IMAGE_NAME: itsm-general-demo
+  SERVICE_NAME: itsm-general-demo
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # 1. Authenticate to Google Cloud
-    - name: Google Auth
-      id: auth
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
+      # 1. Autenticación en Google Cloud
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    # 2. Configure Docker for Artifact Registry
-    - name: Configure Docker for GCP
-      run: |
-        gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+      # 2. Configurar Docker para Artifact Registry
+      - name: Configure Docker for GCP
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-    # 3. Build and push the image
-    - name: Build and Push Docker Image
-      run: |
-        IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-        docker build -t $IMAGE_URL .
-        docker push $IMAGE_URL
-        echo "IMAGE_URL=$IMAGE_URL" >> $GITHUB_ENV
+      # 3. Compilar y subir la imagen Docker
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_URL="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker build -t $IMAGE_URL .
+          docker push $IMAGE_URL
+          echo "IMAGE_URL=$IMAGE_URL" >> $GITHUB_ENV
 
-    # 4. Deploy to Cloud Run
-    - name: Deploy to Cloud Run
-      uses: google-github-actions/deploy-cloudrun@v2
-      with:
-        service: ${{ env.SERVICE_NAME }}
-        region: ${{ env.REGION }}
-        image: ${{ env.IMAGE_URL }}
-        flags: --allow-unauthenticated
-        env_vars: |
-          GLPI_BASE_URL=https://glpi.peer-consulting.com/apirest.php
-          GCS_BUCKET_NAME=oath-itsm-docs
-          GCP_PROJECT=itservicedesk-502618
-          GCP_LOCATION=us-central1
-          GEMINI_MODEL=gemini-2.5-flash
-          AI_MODE=vertex
+      # 4. Desplegar en Cloud Run
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE_URL }}
+          flags: --allow-unauthenticated
+          env_vars: |
+            GLPI_BASE_URL=https://glpi.peer-consulting.com/apirest.php
+            GLPI_ENTITY_ID=1
+            GCS_BUCKET_NAME=itsm-general-demo
+            GOOGLE_CLOUD_PROJECT=itservicedesk-502618
+            VERTEX_LOCATION=us-central1
+            VERTEX_MODEL=gemini-1.5-flash
+            GCP_PROJECT=itservicedesk-502618
+            GCP_LOCATION=us-central1
+            GEMINI_MODEL=gemini-1.5-flash
+            AI_MODE=vertex
+          secrets: |
+            GLPI_APP_TOKEN=GLPI_APP_TOKEN:latest
+            GLPI_USER_TOKEN=GLPI_USER_TOKEN:latest
